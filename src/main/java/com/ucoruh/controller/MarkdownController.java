@@ -20,7 +20,8 @@ public class MarkdownController {
 	private final static Logger LOGGER = Logger.getLogger(MarkdownController.class.getName());
 
 	// If output file not present, this postfix appened end of file ****_single.md
-	public static final String MERGED_FILE_POSTFIX = "mkdocs_";
+	public static final String MERGED_FILE_PREFIX_MKDOCS = "mkdocs_";
+	public static final String MERGED_FILE_PREFIX_PANDOC = "pandoc_";
 
 //	public static final String DELETE_MARK = "@-DELETE-@";
 
@@ -60,7 +61,7 @@ public class MarkdownController {
 	/**
 	 * Return input file
 	 * 
-	 * @return  input file path
+	 * @return input file path
 	 */
 	public String getInputFilePath() {
 		return inputFilePath;
@@ -76,7 +77,7 @@ public class MarkdownController {
 	}
 
 	/**
-	 * Return  output file path
+	 * Return output file path
 	 * 
 	 * @return output file path
 	 */
@@ -85,9 +86,9 @@ public class MarkdownController {
 	}
 
 	/**
-	 * Set  output file path
+	 * Set output file path
 	 * 
-	 * @param outputFilePath [input]  output file path
+	 * @param outputFilePath [input] output file path
 	 */
 	public void setOutputFilePath(String outputFilePath) {
 		this.outputFilePath = outputFilePath;
@@ -139,12 +140,83 @@ public class MarkdownController {
 		List<String> files = Utils.findFiles(Paths.get(this.inputFolderPath), extensions);
 		files.forEach(x -> {
 			try {
-				mergePages(x, null);
+
+				File f = new File(x);
+				if (!f.getName().startsWith(MERGED_FILE_PREFIX_MKDOCS)) {
+					mergePages(x, null);
+				}
+
 			} catch (IOException e) {
 				LOGGER.log(Level.SEVERE, "Merge File Error", e);
 			}
 		});
 
+	}
+
+	/**
+	 * 
+	 * @throws IOException
+	 */
+	public void buildFolder() throws IOException {
+
+		String[] extensions = { "md" };
+		List<String> files = Utils.findFiles(Paths.get(this.inputFolderPath), extensions);
+		files.forEach(x -> {
+			File f = new File(x);
+			if (f.getName().startsWith(MERGED_FILE_PREFIX_MKDOCS)) {
+				// this is single page this can be docx or pdf
+
+				String inputFile = f.getAbsolutePath();
+				String outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_doc", "pdf");
+
+				String[] pandocDocPdfCmd = {"cmd /c start cmd.exe /c pandoc", inputFile, "--pdf-engine=xelatex", "-f",
+						"markdown-implicit_figures", "-V", "colorlinks", "-V", "urlcolor=NavyBlue", "-V",
+						"toccolor=Red", "--toc", "-N", "-o", outputFile };
+
+				LOGGER.info("Building Pandoc PDF");
+
+				LOGGER.info("Input File " + inputFile);
+				LOGGER.info("Output File " + inputFile);
+
+				Utils.executeCommandThread(pandocDocPdfCmd);
+
+				outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_word", "docx");
+
+				String[] pandocDocDocxCmd = {"cmd /c start cmd.exe /c pandoc", "-o", outputFile, "-f", "markdown", "-t",
+						"docx", inputFile };
+				Utils.executeCommandThread(pandocDocDocxCmd);
+
+			} else {
+				// this is presentation
+
+				String inputFile = f.getAbsolutePath();
+				String outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_slide", "pdf");
+
+				String[] marpSlidePdfCmd = { "cmd /c start cmd.exe /c marp", inputFile, "--html", "--pdf", "-o", outputFile,
+						"--allow-local-files" };
+				Utils.executeCommandThread(marpSlidePdfCmd);
+
+				outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_slide", "html");
+
+				String[] marpSlideHtmlCmd = { "cmd /c start cmd.exe /c marp", inputFile, "--html", "-o", outputFile,
+						"--allow-local-files" };
+				Utils.executeCommandThread(marpSlideHtmlCmd);
+
+				outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_slide", "pptx");
+
+				String[] marpSlidePptxCmd = { "cmd /c start cmd.exe /c marp", inputFile, "--pptx", "-o", outputFile,
+						"--allow-local-files" };
+
+				Utils.executeCommandThread(marpSlidePptxCmd);
+
+				outputFile = Utils.filePathWithPostFixOrPrefix(inputFile, "", "_word", "pptx");
+
+				String[] pandocDocPptxCmd = {"cmd /c start cmd.exe /c pandoc", "-o", outputFile, "-f", "markdown", "-t",
+						"pptx", inputFile };
+
+				Utils.executeCommandThread(pandocDocPptxCmd);
+			}
+		});
 	}
 
 	/**
@@ -247,7 +319,7 @@ public class MarkdownController {
 		// Generate Output File Name with Path
 		FileWriter writer = null;
 
-		String defaultFileOutputPath = Utils.filePathWithPostFixOrPrefix(fileInputPath, "", MERGED_FILE_POSTFIX);
+		String defaultFileOutputPath = Utils.filePathWithPostFixOrPrefix(fileInputPath, MERGED_FILE_PREFIX_MKDOCS, "", "");
 
 		// if output file null then use prefix/postfix filename
 		if (Utils.checkStringNullOrEmpty(outputFilePath)) {

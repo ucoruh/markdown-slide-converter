@@ -1,12 +1,16 @@
 package com.ucoruh.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,23 +67,33 @@ public class Utils {
 	 * @param prefix   prefix of file
 	 * @return full path of file with postfix and prefix
 	 */
-	public static String filePathWithPostFixOrPrefix(String filePath, String postfix, String prefix) {
+	public static String filePathWithPostFixOrPrefix(String fiFilePath, String fiPrefix, String fiPostfix,
+			String fiExtension) {
 
 		String extension = null;
 
-		String prefixIn = prefix;
-		String postFixIn = postfix;
+		String prefixIn = Utils.ifNullThenUse(fiPrefix, "");
+		String postFixIn = Utils.ifNullThenUse(fiPostfix, "");
 
-		int index = filePath.lastIndexOf('.');
-		if (index > 0) {
-			extension = filePath.substring(index + 1);
+		if (Utils.checkStringNullOrEmpty(fiExtension)) {
+			int index = fiFilePath.lastIndexOf('.');
+			if (index > 0) {
+				extension = fiFilePath.substring(index + 1);
+			}
+
+		} else {
+			extension = fiExtension;
 		}
 
-		File file = new File(filePath);
+		File file = new File(fiFilePath);
 
 		String fileNameWithOutExt = file.getName().replaceFirst("[.][^.]+$", "");
 
-		return file.getParent() + File.separator + prefixIn + fileNameWithOutExt + postFixIn + "." + extension;
+		String parentFile = "";
+		if (file.getParent() != null)
+			parentFile = file.getParent() + File.separator;
+
+		return parentFile + prefixIn + fileNameWithOutExt + postFixIn + "." + extension;
 	}
 
 	/**
@@ -152,58 +166,187 @@ public class Utils {
 	 * @return
 	 * @throws IOException
 	 */
-//    public static List<String> findFiles(Path path, String[] fileExtensions) throws IOException {
+	public static List<String> findFiles(Path path, String[] fileExtensions) throws IOException {
+		if (!Files.isDirectory(path)) {
+			throw new IllegalArgumentException("Path must be a directory!");
+		}
+
+		List<String> result;
+		try (Stream<Path> walk = Files.walk(path, Integer.MAX_VALUE)) {
+			result = walk.filter(p -> !Files.isDirectory(p))
+					// convert path to string
+					.map(p -> p.toString().toLowerCase()).filter(f -> isEndWith(f, fileExtensions))
+					.collect(Collectors.toList());
+		}
+		return result;
+	}
+
+	/**
+	 * 
+	 * @param file
+	 * @param fileExtensions
+	 * @return
+	 */
+	private static boolean isEndWith(String file, String[] fileExtensions) {
+		boolean result = false;
+		for (String fileExtension : fileExtensions) {
+			if (file.endsWith(fileExtension)) {
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * String imageString = "![alt:\"insertion sort algorithm\" height:500px center](assets/ce100-week-1-intro-ins_sort_2.drawio.svg)";
+	 * String pandocSyntax = convertImageStringToPandoc(imageString);
+	 * System.out.println(pandocSyntax);
+	 * @param imageString
+	 * @return
+	 */
+	public static String convertImageStringToPandoc(String imageString) {
+	    String altText = "";
+	    String path = "";
+	    String height = "";
+	    String center = "";
+
+	    int altStart = imageString.indexOf("[");
+	    int altEnd = imageString.indexOf("]");
+	    if (altStart != -1 && altEnd != -1) {
+	        altText = imageString.substring(altStart + 1, altEnd);
+	    }
+
+	    int pathStart = imageString.indexOf("(");
+	    int pathEnd = imageString.indexOf(" ", pathStart);
+	    if (pathStart != -1 && pathEnd != -1) {
+	        path = imageString.substring(pathStart + 1, pathEnd);
+	    } else if (pathStart != -1) {
+	        path = imageString.substring(pathStart + 1, imageString.length() - 1);
+	    }
+
+	    String attributes = imageString.substring(pathEnd + 1, imageString.length() - 1);
+	    String[] attributeList = attributes.split(" ");
+
+	    for (int i = 0; i < attributeList.length; i++) {
+	        String[] attribute = attributeList[i].split(":");
+	        if (attribute[0].equals("height")) {
+	            height = attribute[1];
+	        } else if (attribute[0].equals("center")) {
+	            center = ".center";
+	        }
+	    }
+
+	    return String.format("![%s](%s){ height=%s%s }", altText, path, height, center);
+	}
+
+	
+
+	public static void executeCommand(String[] command) {
+		try {
+
+			ProcessBuilder builder = new ProcessBuilder(command);
+			// builder.directory(new File(System.getProperty("user.dir")));
+			builder.redirectErrorStream(true);
+			Process process = builder.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				System.out.println(line);
+			}
+			int exitCode = process.waitFor();
+			System.out.println("Command execution completed with exit code: " + exitCode);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static String executeCommandThread(String[] command) {
+		
+		String commandCombined = String.join(" ", command);
+		
+	    StringBuilder output = new StringBuilder();
+
+	    Process process;
+	    try {
+	        process = Runtime.getRuntime().exec(commandCombined);
+
+	        // Create a thread to read the output of the process
+	        Thread outputThread = new Thread(() -> {
+	            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+	                String line;
+	                while ((line = reader.readLine()) != null) {
+	                    output.append(line).append('\n');
+	                }
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        });
+	        outputThread.start();
+
+	        // Wait for the process to finish and then join the output thread
+	        int exitCode = process.waitFor();
+	        outputThread.join();
+
+	        if (exitCode != 0) {
+	            throw new RuntimeException("Command failed with exit code " + exitCode);
+	        }
+
+	    } catch (IOException | InterruptedException e) {
+	        e.printStackTrace();
+	    }
+
+	    return output.toString();
+	}
+
+	
+//    public static String[] executeCommand(String[] command){
+//        
+//        
+//        String s = null;
+//        
+//        String[] outList = new String[2];
 //
-//        if (!Files.isDirectory(path)) {
-//            throw new IllegalArgumentException("Path must be a directory!");
+//        try {
+//        	
+//        	String commandString = "";
+//        	
+//        	for(String cmd : command)
+//        	{
+//        		commandString+=" "+cmd;
+//        	}
+//        	
+//        	commandString = commandString.substring(1,commandString.length());
+//        	
+//            
+//            Process p = Runtime.getRuntime().exec(commandString);
+//            
+//            BufferedReader stdInput = new BufferedReader(new 
+//                 InputStreamReader(p.getInputStream()));
+//
+//            BufferedReader stdError = new BufferedReader(new 
+//                 InputStreamReader(p.getErrorStream()));
+//
+//            // read the output from the command
+//            System.out.println("Standard output of the command:\n");
+//            while ((s = stdInput.readLine()) != null) {
+//                outList[0]+=s+"\r\n";
+//                System.out.println(s);
+//            }
+//            
+//            // read any errors from the attempted command
+//            System.out.println("Standard error of the command (if any):\n");
+//            while ((s = stdError.readLine()) != null) {
+//                outList[1]+=s+"\r\n";
+//                System.out.println(s);
+//            }
 //        }
-//
-//        List<String> result;
-//        try (Stream<Path> walk = Files.walk(path, 1)) {
-//            result = walk
-//                    .filter(p -> !Files.isDirectory(p))
-//                    // convert path to string
-//                    .map(p -> p.toString().toLowerCase())
-//                    .filter(f -> isEndWith(f, fileExtensions))
-//                    .collect(Collectors.toList());
+//        catch (IOException e) {
+//            System.out.println("Exception happened: ");
+//            e.printStackTrace();
 //        }
-//        return result;
-//
+//        
+//        return outList;
 //    }
-    
-    
-    public static List<String> findFiles(Path path, String[] fileExtensions) throws IOException {
-        if (!Files.isDirectory(path)) {
-            throw new IllegalArgumentException("Path must be a directory!");
-        }
-
-        List<String> result;
-        try (Stream<Path> walk = Files.walk(path, Integer.MAX_VALUE)) {
-            result = walk
-                .filter(p -> !Files.isDirectory(p))
-                // convert path to string
-                .map(p -> p.toString().toLowerCase())
-                .filter(f -> isEndWith(f, fileExtensions))
-                .collect(Collectors.toList());
-        }
-        return result;
-    }
-
-    /**
-     * 
-     * @param file
-     * @param fileExtensions
-     * @return
-     */
-    private static boolean isEndWith(String file, String[] fileExtensions) {
-        boolean result = false;
-        for (String fileExtension : fileExtensions) {
-            if (file.endsWith(fileExtension)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
 
 }

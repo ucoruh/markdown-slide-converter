@@ -17,19 +17,18 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.ucoruh.controller.MarkdownController;
+import com.ucoruh.logger.LogController;
 import com.ucoruh.utils.Utils;
 
 public class MainClass {
 
-	
-	
-	// input file for signature
+	// input file for
 	private static Path inputFolderPath = null;
-	
-	// input file for signature
+
+	// input file for
 	private static File inputFile = null;
 
-	// output file for signature
+	// output file for
 	private static File outputFile = null;
 
 	// overwrite output file if exist
@@ -38,11 +37,13 @@ public class MainClass {
 	// Logger JUL
 	private final static Logger LOGGER = Logger.getLogger(MainClass.class.getName());
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+
+		LogController.setup();
 
 		// Build Options
 		LOGGER.info("Application started");
-
+		
 		Options options = buildOptions();
 
 		LOGGER.info("Command line options builded");
@@ -57,161 +58,14 @@ public class MainClass {
 
 			// Argument Controls
 			if (cmd.hasOption("help")) {
-
-				LOGGER.info("--help option used, printing help");
-				displayHelp(options);
-
+				helpOptionProcessing(options);
 			} else if (cmd.hasOption("mergefile")) {
-
-				LOGGER.info("--mergefile option used");
-
-				if (cmd.hasOption("overwrite")) {
-					isOverwriteEnabled = true;
-					LOGGER.info("--mergefile option used with --overwrite to overwrite output markdown file");
-				}
-
-				String[] fileNames = cmd.getOptionValues("mergefile");
-
-				if (fileNames.length == 1) {
-
-					inputFile = new File(Utils.getFullPath(fileNames[0]));
-
-					LOGGER.info("--mergefile option used with input file only, output will be include "
-							+ MarkdownController.MERGED_FILE_POSTFIX + " postfix");
-
-					LOGGER.info("--mergefile option inputfile value [" + fileNames[0] + "]");
-					LOGGER.info("--mergefile option inputfile converted value [" + inputFile + "]");
-
-				} else if (fileNames.length == 2) {
-
-					inputFile = new File(Utils.getFullPath(fileNames[0]));
-					outputFile = new File(Utils.getFullPath(fileNames[1]));
-
-					LOGGER.info("--mergefile option used with input and output file");
-
-					LOGGER.info("--mergefile option inputfile value [" + fileNames[0] + "]");
-					LOGGER.info("--mergefile option inputfile converted value [" + inputFile + "]");
-
-					LOGGER.info("--mergefile option outputFile value [" + fileNames[1] + "]");
-					LOGGER.info("--mergefile option outputFile converted value [" + outputFile + "]");
-
-					ifOutputFileExistLogic(options, outputFile);
-					ifOutputFileNotExistLogic(options, outputFile);
-
-				} else {
-
-					LOGGER.severe("--mergefile option file value must be 1 or 2");
-
-					if (fileNames.length == 0) {
-						LOGGER.severe("--mergefile option file value doesn't exist");
-					}
-
-					for (String value : fileNames) {
-						LOGGER.severe("--mergefile option file value [" + value + "]");
-					}
-
-					displayHelp(options);
-					LOGGER.severe("Operation Terminated");
-					System.exit(-1);
-				}
-
-				MarkdownController controller = null;
-
-				try {
-
-					controller = new MarkdownController();
-
-					controller.setInputFilePath(inputFile.getPath());
-
-					if (outputFile != null) {
-						controller.setOutputFilePath(outputFile.getPath());
-					}
-
-					controller.mergeSingleFile();
-
-					LOGGER.info("--mergefile option completed");
-
-				} catch (IOException e) {
-
-					LOGGER.log(Level.SEVERE, "--mergefile operation error", e);
-					e.printStackTrace();
-					displayHelp(options);
-					LOGGER.severe("Operation Terminated");
-					System.exit(-1);
-				}
-
+				mergeFileOptionProcessing(options, cmd);
 			} else if (cmd.hasOption("mergefolder")) {
-
-				LOGGER.info("--mergefolder option used");
-
-				if (cmd.hasOption("overwrite")) {
-					isOverwriteEnabled = true;
-					LOGGER.info("--mergefolder option used with --overwrite to overwrite output markdown file");
-				}
-
-				String[] folderPath = cmd.getOptionValues("mergefolder");
-
-				if (folderPath.length == 1) {
-
-//					inputFolder = new File(Utils.getFullPath(folderPath[0]));
-
-					LOGGER.info("--mergefolder option used with input file only, output will be include "
-							+ MarkdownController.MERGED_FILE_POSTFIX + " postfix");
-					
-					
-					
-
-					LOGGER.info("--mergefolder option input path value [" + folderPath[0] + "]");
-					
-					if(!Paths.get(folderPath[0]).isAbsolute())
-					{
-						inputFolderPath = Paths.get(Utils.getWorkingDirectory()).resolve(folderPath[0]).toAbsolutePath();
-					}else {
-						inputFolderPath = Paths.get(folderPath[0]);
-					}
-					
-					LOGGER.info("--mergefolder option input path converted value [" + inputFolderPath.getFileName().toAbsolutePath().toString() + "]");
-
-				} else {
-
-					LOGGER.severe("--mergefolder option input path value must be 1");
-
-					if (folderPath.length == 0) {
-						LOGGER.severe("--mergefolder option input path value doesn't exist");
-					}
-
-					for (String value : folderPath) {
-						LOGGER.severe("--mergefolder option input path value [" + value + "]");
-					}
-
-					displayHelp(options);
-					LOGGER.severe("Operation Terminated");
-					System.exit(-1);
-				}
-
-				MarkdownController controller = null;
-
-				try {
-
-					controller = new MarkdownController();
-
-					controller.setInputFolderPath(inputFolderPath.getFileName().toAbsolutePath().toString());
-
-					controller.mergeFolder();
-
-					LOGGER.info("--mergefolder option completed");
-
-				} catch (IOException e) {
-
-					LOGGER.log(Level.SEVERE, "--mergefolder operation error", e);
-					e.printStackTrace();
-					displayHelp(options);
-					LOGGER.severe("Operation Terminated");
-					System.exit(-1);
-				}
-
+				mergeFolderOptionProcessing(options, cmd);
+			} else if (cmd.hasOption("buildfolder")) {
+				buildFolderOptionProcessing(options, cmd);
 			} else {
-
 				displayHelp(options);
 				LOGGER.severe("Operation Terminated");
 				System.exit(-1);
@@ -224,6 +78,244 @@ public class MainClass {
 			System.exit(-1);
 		}
 
+	}
+
+	/**
+	 * 
+	 * @param options
+	 * @param cmd
+	 * @throws URISyntaxException
+	 */
+	private static void buildFolderOptionProcessing(Options options, CommandLine cmd) throws URISyntaxException {
+		
+		LOGGER.info("--buildfolder option used");
+
+		if (cmd.hasOption("overwrite")) {
+			isOverwriteEnabled = true;
+			LOGGER.info("--buildfolder option used with --overwrite to overwrite output markdown file");
+		}
+
+		String[] folderPath = cmd.getOptionValues("buildfolder");
+
+		if (folderPath.length == 1) {
+
+			LOGGER.info("--buildfolder option used with input file only, output will be include "
+					+ MarkdownController.MERGED_FILE_PREFIX_MKDOCS + " postfix");
+
+			LOGGER.info("--buildfolder option input path value [" + folderPath[0] + "]");
+
+			if (!Paths.get(folderPath[0]).isAbsolute()) {
+				inputFolderPath = Paths.get(Utils.getWorkingDirectory()).resolve(folderPath[0]).toAbsolutePath();
+			} else {
+				inputFolderPath = Paths.get(folderPath[0]);
+			}
+
+			LOGGER.info("--buildfolder option input path converted value ["
+					+ inputFolderPath.getFileName().toAbsolutePath().toString() + "]");
+
+		} else {
+
+			LOGGER.severe("--buildfolder option input path value must be 1");
+
+			if (folderPath.length == 0) {
+				LOGGER.severe("--buildfolder option input path value doesn't exist");
+			}
+
+			for (String value : folderPath) {
+				LOGGER.severe("--buildfolder option input path value [" + value + "]");
+			}
+
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+
+		MarkdownController controller = null;
+
+		try {
+
+			controller = new MarkdownController();
+
+			controller.setInputFolderPath(inputFolderPath.getFileName().toAbsolutePath().toString());
+
+			controller.buildFolder();
+
+			LOGGER.info("--buildfolder option completed");
+
+		} catch (IOException e) {
+
+			LOGGER.log(Level.SEVERE, "--buildfolder operation error", e);
+			e.printStackTrace();
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * 
+	 * @param options
+	 * @param cmd
+	 * @throws URISyntaxException
+	 */
+	private static void mergeFolderOptionProcessing(Options options, CommandLine cmd) throws URISyntaxException {
+		
+		LOGGER.info("--mergefolder option used");
+
+		if (cmd.hasOption("overwrite")) {
+			isOverwriteEnabled = true;
+			LOGGER.info("--mergefolder option used with --overwrite to overwrite output markdown file");
+		}
+
+		String[] folderPath = cmd.getOptionValues("mergefolder");
+
+		if (folderPath.length == 1) {
+
+			LOGGER.info("--mergefolder option used with input file only, output will be include "
+					+ MarkdownController.MERGED_FILE_PREFIX_MKDOCS + " postfix");
+
+			LOGGER.info("--mergefolder option input path value [" + folderPath[0] + "]");
+
+			if (!Paths.get(folderPath[0]).isAbsolute()) {
+				inputFolderPath = Paths.get(Utils.getWorkingDirectory()).resolve(folderPath[0]).toAbsolutePath();
+			} else {
+				inputFolderPath = Paths.get(folderPath[0]);
+			}
+
+			LOGGER.info("--mergefolder option input path converted value ["
+					+ inputFolderPath.getFileName().toAbsolutePath().toString() + "]");
+
+		} else {
+
+			LOGGER.severe("--mergefolder option input path value must be 1");
+
+			if (folderPath.length == 0) {
+				LOGGER.severe("--mergefolder option input path value doesn't exist");
+			}
+
+			for (String value : folderPath) {
+				LOGGER.severe("--mergefolder option input path value [" + value + "]");
+			}
+
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+
+		MarkdownController controller = null;
+
+		try {
+
+			controller = new MarkdownController();
+
+			controller.setInputFolderPath(inputFolderPath.getFileName().toAbsolutePath().toString());
+
+			controller.mergeFolder();
+
+			LOGGER.info("--mergefolder option completed");
+
+		} catch (IOException e) {
+
+			LOGGER.log(Level.SEVERE, "--mergefolder operation error", e);
+			e.printStackTrace();
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * 
+	 * @param options
+	 * @param cmd
+	 * @throws URISyntaxException
+	 */
+	private static void mergeFileOptionProcessing(Options options, CommandLine cmd) throws URISyntaxException {
+		LOGGER.info("--mergefile option used");
+
+		if (cmd.hasOption("overwrite")) {
+			isOverwriteEnabled = true;
+			LOGGER.info("--mergefile option used with --overwrite to overwrite output markdown file");
+		}
+
+		String[] fileNames = cmd.getOptionValues("mergefile");
+
+		if (fileNames.length == 1) {
+
+			inputFile = new File(Utils.getFullPath(fileNames[0]));
+
+			LOGGER.info("--mergefile option used with input file only, output will be include "
+					+ MarkdownController.MERGED_FILE_PREFIX_MKDOCS + " postfix");
+
+			LOGGER.info("--mergefile option inputfile value [" + fileNames[0] + "]");
+			LOGGER.info("--mergefile option inputfile converted value [" + inputFile + "]");
+
+		} else if (fileNames.length == 2) {
+
+			inputFile = new File(Utils.getFullPath(fileNames[0]));
+			outputFile = new File(Utils.getFullPath(fileNames[1]));
+
+			LOGGER.info("--mergefile option used with input and output file");
+
+			LOGGER.info("--mergefile option inputfile value [" + fileNames[0] + "]");
+			LOGGER.info("--mergefile option inputfile converted value [" + inputFile + "]");
+
+			LOGGER.info("--mergefile option outputFile value [" + fileNames[1] + "]");
+			LOGGER.info("--mergefile option outputFile converted value [" + outputFile + "]");
+
+			ifOutputFileExistLogic(options, outputFile);
+			ifOutputFileNotExistLogic(options, outputFile);
+
+		} else {
+
+			LOGGER.severe("--mergefile option file value must be 1 or 2");
+
+			if (fileNames.length == 0) {
+				LOGGER.severe("--mergefile option file value doesn't exist");
+			}
+
+			for (String value : fileNames) {
+				LOGGER.severe("--mergefile option file value [" + value + "]");
+			}
+
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+
+		MarkdownController controller = null;
+
+		try {
+
+			controller = new MarkdownController();
+
+			controller.setInputFilePath(inputFile.getPath());
+
+			if (outputFile != null) {
+				controller.setOutputFilePath(outputFile.getPath());
+			}
+
+			controller.mergeSingleFile();
+
+			LOGGER.info("--mergefile option completed");
+
+		} catch (IOException e) {
+
+			LOGGER.log(Level.SEVERE, "--mergefile operation error", e);
+			e.printStackTrace();
+			displayHelp(options);
+			LOGGER.severe("Operation Terminated");
+			System.exit(-1);
+		}
+	}
+
+	/**
+	 * 
+	 * @param options
+	 */
+	private static void helpOptionProcessing(Options options) {
+		LOGGER.info("--help option used, printing help");
+		displayHelp(options);
 	}
 
 	/**
@@ -315,6 +407,11 @@ public class MainClass {
 		Option mergeFolderOption = Option.builder().longOpt("mergefolder").argName("folder input path>").hasArgs()
 				.desc("Merge markdown slide/newpage seperators and remove dublicated titles for folder").build();
 		options.addOption(mergeFolderOption);
+
+		// Merge File Option Added
+		Option buildFolderOption = Option.builder().longOpt("buildfolder").argName("folder input path>").hasArgs()
+				.desc("Build markdown files with Pandoc and Marp in selected folder and subfolders").build();
+		options.addOption(buildFolderOption);
 
 		return options;
 	}
