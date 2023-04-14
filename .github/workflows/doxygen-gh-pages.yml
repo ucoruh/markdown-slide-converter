@@ -10,7 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - run: mkdir doxygen/Docs/
+    - run: mkdir -p doxygen/Docs/html
     - uses: mattnotmitt/doxygen-action@v1.9.5
       with:
         working-directory: 'doxygen/Docs/'
