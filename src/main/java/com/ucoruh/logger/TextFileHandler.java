@@ -5,16 +5,16 @@ import java.util.logging.FileHandler;
 
 /**
  * 
- * @author ugur.coruh
+ * A custom FileHandler for logging to a text file. Used for logging.properties
+ * to define multiple file handlers.
  * 
- * Used for logging.properties to define multiple file handler
- *
+ * @see java.util.logging.FileHandler
+ * @author ugur.coruh
  */
 public class TextFileHandler extends FileHandler {
-	
+
 	public TextFileHandler() throws IOException, SecurityException {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 }
