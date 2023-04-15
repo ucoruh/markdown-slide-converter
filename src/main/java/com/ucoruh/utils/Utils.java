@@ -50,6 +50,84 @@ public class Utils {
 
 	// Logger JUL
 	private final static Logger LOGGER = Logger.getLogger(Utils.class.getName());
+	
+	
+	public static String generateDownloadAndIframeLinksforMkDocs(String inputFilePath)
+	{
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(" **DOWNLOADS:**");
+		sb.append(System.lineSeparator());
+		
+		String outputFilePath;
+		File outputFile;
+		
+		LOGGER.info("Generating Marp Presentation PDF Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "pdf", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		sb.append(" - [PRESENTATION-PDF-MARP]("+outputFile.getName()+")");
+		sb.append(System.lineSeparator());
+	
+		LOGGER.info("Generating Marp Presentation PPTX Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "pptx", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		sb.append(" - [PRESENTATION-PPTX-MARP]("+outputFile.getName()+")");
+		sb.append(System.lineSeparator());
+
+		LOGGER.info("Generating Pandoc Presentation PPTX Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "panppt_", "_word", "pptx", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		sb.append(" - [PRESENTATION-PPTX-PANDOC]("+outputFile.getName()+")");
+		sb.append(System.lineSeparator());
+
+		LOGGER.info("Generating Pandoc Document PDF Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "pandoc_", "_doc", "pdf", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		sb.append(" - [DOCUMENT-PDF-PANDOC]("+outputFile.getName()+")");
+		sb.append(System.lineSeparator());
+
+		LOGGER.info("Generating Pandoc Document DOCX Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "pandoc_", "_word", "docx", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		sb.append(" - [DOCUMENT-DOCX-PANDOC]("+outputFile.getName()+")");
+		sb.append(System.lineSeparator());
+		
+		LOGGER.info("Generating Marp Presentation HTML Links");
+
+		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "html", false);
+		outputFile = new File(outputFilePath);
+		
+		LOGGER.info("Output File : " + outputFilePath);
+		
+		for(int i=0;i<2;i++) {
+			sb.append(System.lineSeparator());	
+		}
+		
+		sb.append("<iframe width=700, height=500 frameBorder=0 src=\"../"+outputFile.getName()+"\"></iframe>");
+		
+		return sb.toString();
+		
+	}
 
 	/**
 	 * 

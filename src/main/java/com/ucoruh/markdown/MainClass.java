@@ -69,7 +69,7 @@ public class MainClass {
 
 		// Build Options
 		LOGGER.info("Application started");
-
+		
 		Options options = buildOptions();
 
 		ControllerOptions controllerOptions = new ControllerOptions();

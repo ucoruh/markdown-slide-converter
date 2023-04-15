@@ -445,6 +445,8 @@ public class MarkdownController {
 
 		boolean repeatedItems = true;
 
+		int firstPageSeperatorIndex = 0;
+
 		while (repeatedItems) {
 
 			int counter = 0;
@@ -470,6 +472,11 @@ public class MarkdownController {
 				if (counter > 2 && seperator) {
 					markdownExludedlines.add(i);
 					lastSeperatorIndex = i;
+				}
+
+				// get first page seperator index
+				if (firstPageSeperatorIndex == 0 && counter == 3) {
+					firstPageSeperatorIndex = i;
 				}
 
 				if (markdownlinesMarp.get(i).trim().toLowerCase().startsWith(MarkdownController.HEADER_CHAR)) {
@@ -515,6 +522,11 @@ public class MarkdownController {
 			String markdownline = markdownlinesMarp.get(i);
 
 			boolean converted = false;
+
+			//add download links and iframe
+			if (i == firstPageSeperatorIndex) {
+				markdownlinesMkdocsWeb.add(Utils.generateDownloadAndIframeLinksforMkDocs(fileInputPath));
+			}
 
 			if (!markdownExludedlines.contains(i)) {
 
