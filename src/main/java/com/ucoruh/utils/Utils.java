@@ -505,13 +505,17 @@ public class Utils {
 	}
 
 	/**
-	 * Generates a file path with a prefix and/or postfix and an extension.
-	 * 
+	 * Generates a file path by adding a prefix and/or postfix and changing the
+	 * extension.
+	 *
 	 * @param filePath  The original file path.
-	 * @param prefix    The prefix to add.
-	 * @param postfix   The postfix to add.
-	 * @param extension The extension to use. If null or empty, it is extracted from
-	 *                  the original file path.
+	 * @param prefix    The prefix to add. Can be null or empty if no prefix is
+	 *                  needed.
+	 * @param postfix   The postfix to add. Can be null or empty if no postfix is
+	 *                  needed.
+	 * @param extension The new extension to use. Can be null or empty if the
+	 *                  original extension should be used.
+	 * @param wrap      Whether to wrap the resulting path in quotes.
 	 * @return The full path of the file with the prefix and postfix added and the
 	 *         new extension.
 	 */
