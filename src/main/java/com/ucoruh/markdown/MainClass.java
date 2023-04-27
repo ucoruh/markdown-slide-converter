@@ -2,7 +2,6 @@ package com.ucoruh.markdown;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ModuleLayer.Controller;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -25,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 //import com.theokanning.openai.service.OpenAiService;
 import com.ucoruh.controller.MarkdownController;
 import com.ucoruh.logger.LogController;
+import com.ucoruh.mkdocs.MkdocsBuilder;
 import com.ucoruh.option.ControllerOptions;
 import com.ucoruh.option.OptionType;
 import com.ucoruh.utils.Utils;
@@ -69,7 +69,7 @@ public class MainClass {
 
 		// Build Options
 		LOGGER.info("Application started");
-		
+				
 		Options options = buildOptions();
 
 		ControllerOptions controllerOptions = new ControllerOptions();

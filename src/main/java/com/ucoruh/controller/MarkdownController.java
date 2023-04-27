@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 
 import org.apache.batik.transcoder.TranscoderException;
 
+import com.ucoruh.mkdocs.LicenseTypes;
+import com.ucoruh.mkdocs.MkdocsBuilder;
 import com.ucoruh.option.ControllerOptions;
 import com.ucoruh.utils.Utils;
 
@@ -658,6 +660,99 @@ public class MarkdownController {
 		// TODO: Generate Required Files
 		// TODO: Generate Default MARP markdown files
 		// TODO : Run in with Merge command and Build option...
+		
+		MkdocsBuilder builder = new MkdocsBuilder();
+		
+		String rootPath = folderInputPath;
+		
+		LOGGER.info("Creating Mkdocs Material Default Overrides...");
+		try {
+			builder.copyOverridesAndImages(rootPath);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating Mkdocs Material Default Overrides Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating Mkdocs Material Default Overrides Successfully Completed.");
+		
+		
+		LOGGER.info("Creating ChangeLog File...");
+		try {
+			builder.createChangeLogMarkdownFiles(null, rootPath);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating ChangeLog File Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating ChangeLog File Successfully Completed.");
+		
+		LOGGER.info("Creating Homepage File...");
+		try {
+			builder.createHomePageIndexMarkdownFile(rootPath);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating Homepage File Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating Homepage File Successfully Completed.");
+		
+		
+		LOGGER.info("Creating License File...");
+		try {
+			builder.createLicenseMarkdownFiles(LicenseTypes.MIT, "Asst. Prof. Dr. Uğur CORUH","Dr. Öğr. Üyesi Uğur CORUH", 2019,2023, rootPath);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating License File Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating License File Successfully Completed.");
+		
+		
+		LOGGER.info("Creating Tag File...");
+		try {
+			builder.createTagsMarkdownFile(rootPath);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating Tag File Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating Tag File Successfully Completed.");
+		
+		
+		LOGGER.info("Creating Batch Scripts and Root Files...");
+		try {
+			builder.copyBatchScriptsAndRootFiles(rootPath, "course-test", "ucoruh");
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "Creating Batch Scripts and Root Files Failed, Terminating Operation",e);
+			return false;
+		}
+		LOGGER.info("Creating Batch Scripts and Root Files Successfully Completed.");
+		
+		
+//		String docRoot = Utils.combinePaths(folderInputPath,"docs");
+//		
+//		this.options.setFolderInputPath(docRoot);
+//		
+//		try {
+//			this.clean();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			this.mergePages();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (TranscoderException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			this.buildPages();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		
 		return false;
 	}
 

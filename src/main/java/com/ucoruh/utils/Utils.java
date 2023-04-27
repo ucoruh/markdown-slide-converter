@@ -4,11 +4,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,83 +53,108 @@ public class Utils {
 
 	// Logger JUL
 	private final static Logger LOGGER = Logger.getLogger(Utils.class.getName());
-	
-	
-	public static String generateDownloadAndIframeLinksforMkDocs(String inputFilePath)
-	{
-		
+
+	/**
+	 * Recursively creates directories given a path.
+	 * 
+	 * @param path The path of the directory to create.
+	 */
+	public static void createDirectories(String path) {
+		File file = new File(path);
+
+		if (!file.exists()) {
+			// Get the parent directory and create it recursively
+			String parent = file.getParent();
+			if (parent != null) {
+				createDirectories(parent);
+			}
+
+			// Create the directory
+			file.mkdir();
+		}
+	}
+
+	/**
+	 * Generates download links and an iframe for a given input file path for
+	 * MkDocs.
+	 * 
+	 * @param inputFilePath The path of the input file.
+	 * @return The generated download links and iframe.
+	 */
+	public static String generateDownloadAndIframeLinksforMkDocs(String inputFilePath) {
+
 		StringBuilder sb = new StringBuilder();
 		sb.append(" **DOWNLOADS:**");
 		sb.append(System.lineSeparator());
-		
+
 		String outputFilePath;
 		File outputFile;
-		
+
 		LOGGER.info("Generating Marp Presentation PDF Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "pdf", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		sb.append(" - [PRESENTATION-PDF-MARP]("+outputFile.getName()+")");
+
+		sb.append(" - [PRESENTATION-PDF-MARP](" + outputFile.getName() + ")");
 		sb.append(System.lineSeparator());
-	
+
 		LOGGER.info("Generating Marp Presentation PPTX Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "pptx", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		sb.append(" - [PRESENTATION-PPTX-MARP]("+outputFile.getName()+")");
+
+		sb.append(" - [PRESENTATION-PPTX-MARP](" + outputFile.getName() + ")");
 		sb.append(System.lineSeparator());
 
 		LOGGER.info("Generating Pandoc Presentation PPTX Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "panppt_", "_word", "pptx", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		sb.append(" - [PRESENTATION-PPTX-PANDOC]("+outputFile.getName()+")");
+
+		sb.append(" - [PRESENTATION-PPTX-PANDOC](" + outputFile.getName() + ")");
 		sb.append(System.lineSeparator());
 
 		LOGGER.info("Generating Pandoc Document PDF Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "pandoc_", "_doc", "pdf", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		sb.append(" - [DOCUMENT-PDF-PANDOC]("+outputFile.getName()+")");
+
+		sb.append(" - [DOCUMENT-PDF-PANDOC](" + outputFile.getName() + ")");
 		sb.append(System.lineSeparator());
 
 		LOGGER.info("Generating Pandoc Document DOCX Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "pandoc_", "_word", "docx", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		sb.append(" - [DOCUMENT-DOCX-PANDOC]("+outputFile.getName()+")");
+
+		sb.append(" - [DOCUMENT-DOCX-PANDOC](" + outputFile.getName() + ")");
 		sb.append(System.lineSeparator());
-		
+
 		LOGGER.info("Generating Marp Presentation HTML Links");
 
 		outputFilePath = Utils.generateFilePath(inputFilePath, "", "_slide", "html", false);
 		outputFile = new File(outputFilePath);
-		
+
 		LOGGER.info("Output File : " + outputFilePath);
-		
-		for(int i=0;i<2;i++) {
-			sb.append(System.lineSeparator());	
+
+		for (int i = 0; i < 2; i++) {
+			sb.append(System.lineSeparator());
 		}
-		
-		sb.append("<iframe width=700, height=500 frameBorder=0 src=\"../"+outputFile.getName()+"\"></iframe>");
-		
+
+		sb.append("<iframe width=700, height=500 frameBorder=0 src=\"../" + outputFile.getName() + "\"></iframe>");
+
 		return sb.toString();
-		
+
 	}
 
 	/**
@@ -1018,6 +1046,93 @@ public class Utils {
 		} while (file.exists());
 
 		return fileName;
+	}
+
+	/**
+	 * 
+	 * Creates a new file with the specified file name and content. If the file
+	 * already exists, it will be deleted and recreated.
+	 * 
+	 * @param fileName the name of the file to be created
+	 * @param content  the content to be written in the file
+	 * @throws IOException if an I/O error occurs while creating or writing to the
+	 *                     file
+	 */
+	public static void createFileWithContent(String fileName, String content) throws IOException {
+		try {
+
+			File file = new File(fileName);
+			if (file.exists()) {
+				file.delete();
+			}
+
+			Utils.createDirectories(fileName);
+
+			BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+			writer.write(content);
+			writer.close();
+		} catch (IOException e) {
+			throw new IOException("An error occurred while creating the batch file.", e);
+		}
+	}
+
+	/*
+	 * List<Person> people = new ArrayList<>(); 
+	 * people.add(new Person("John", "Doe",30)); 
+	 * people.add(new Person("Jane", "Smith", 25)); 
+	 * String tableString = createMarkdownTable(people); System.out.println(tableString);
+	 * 
+	 * | firstName | lastName | age |
+	 * | --- | --- | --- |
+	 * | John | Doe | 30 |
+	 * | Jane | Smith | 25 |
+	 * 
+	 */
+	public static <T> String createMarkdownTable(List<T> dataList) {
+		if (dataList == null || dataList.isEmpty()) {
+			return "";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		// Get headers from the first object in the list
+		T firstData = dataList.get(0);
+		Field[] fields = firstData.getClass().getDeclaredFields();
+		List<String> headers = new ArrayList<>();
+		for (Field field : fields) {
+			headers.add(field.getName());
+		}
+
+		// Create header row
+		sb.append("|");
+		for (String header : headers) {
+			sb.append(" ").append(header).append(" |");
+		}
+		sb.append("\n");
+
+		// Create separator row
+		sb.append("|");
+		for (int i = 0; i < headers.size(); i++) {
+			sb.append(" --- |");
+		}
+		sb.append("\n");
+
+		// Create data rows
+		for (T data : dataList) {
+			sb.append("|");
+			for (Field field : fields) {
+				field.setAccessible(true);
+				try {
+					Object value = field.get(data);
+					sb.append(" ").append(value != null ? value.toString() : "").append(" |");
+				} catch (IllegalAccessException e) {
+					sb.append(" |");
+				}
+			}
+			sb.append("\n");
+		}
+
+		return sb.toString();
 	}
 
 }

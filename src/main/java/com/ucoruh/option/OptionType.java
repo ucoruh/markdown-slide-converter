@@ -6,9 +6,13 @@ package com.ucoruh.option;
  */
 public enum OptionType {
 
-	NONE("notset"), MERGEPAGES(ControllerOptions.MERGEPAGES_OPTION), BUILDPAGES(ControllerOptions.BUILDPAGES_OPTION),
-	DEPLOYPAGES(ControllerOptions.DEPLOYPAGES_OPTION), GENERATEPAGES(ControllerOptions.GENERATEPAGES_OPTION),
-	CLEANPAGES(ControllerOptions.CLEANPAGES_OPTION), DRAWIOEXPORT(ControllerOptions.DRAWIOEXPORT_OPTION),
+	NONE("notset"), 
+	MERGEPAGES(ControllerOptions.MERGEPAGES_OPTION), 
+	BUILDPAGES(ControllerOptions.BUILDPAGES_OPTION),
+	DEPLOYPAGES(ControllerOptions.DEPLOYPAGES_OPTION), 
+	GENERATEPAGES(ControllerOptions.GENERATEPAGES_OPTION),
+	CLEANPAGES(ControllerOptions.CLEANPAGES_OPTION), 
+	DRAWIOEXPORT(ControllerOptions.DRAWIOEXPORT_OPTION),
 	HELP(ControllerOptions.HELP_OPTION);
 
 	private String commandName;
